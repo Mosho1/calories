@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html ng-app="plunker">
+
+  <head>
+    <meta charset="utf-8" />
+    <title>AngularJS Plunker</title>
+    <link href="http://fonts.googleapis.com/css?family=Roboto" rel="stylesheet" type="text/css" />
+    <link data-require="ng-grid@2.0.9" data-semver="2.0.9" rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/ng-grid/2.0.9/ng-grid.css" />
+    <link data-require="jqueryui@*" data-semver="1.10.0" rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.0/css/smoothness/jquery-ui-1.10.0.custom.min.css" />
+    <link data-require="960gs@0.0.0" data-semver="0.0.0" rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/960gs/0/960.css" />
+    <script data-require="d3@3.3.11" data-semver="3.3.11" src="http://d3js.org/d3.v3.min.js"></script>
+    <link data-require="nvd3@*" data-semver="1.1.14-beta" rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/nvd3/1.1.14-beta/nv.d3.css" />
+    <link data-require="bootstrap-css@*" data-semver="3.2.0" rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" />
+    <script data-require="nvd3@*" data-semver="1.1.14-beta" src="//cdnjs.cloudflare.com/ajax/libs/nvd3/1.1.14-beta/nv.d3.js"></script>
+    <script data-require="jquery@*" data-semver="2.1.1" src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script data-require="jqueryui@*" data-semver="1.10.0" src="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.0/jquery-ui.js"></script>
+    <script>document.write('<base href="' + document.location + '" />');</script>
+    <link rel="stylesheet" href="style.css" />
+    <script data-require="angular.js@1.2.x" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.17/angular.min.js" data-semver="1.2.17"></script>
+    <script data-require="ng-grid@2.0.9" data-semver="2.0.9" src="http://cdnjs.cloudflare.com/ajax/libs/ng-grid/2.0.9/ng-grid.js"></script>
+    <script data-require="lodash.js@2.4.1" data-semver="2.4.1" src="http://cdnjs.cloudflare.com/ajax/libs/lodash.js/2.4.1/lodash.js"></script>
+    <script data-require="bootstrap@*" data-semver="3.1.1" src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+    <script src="http://crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/hmac-sha1.js"></script>
+    <script src="http://crypto-js.googlecode.com/svn/tags/3.1.2/build/components/enc-base64-min.js"></script>
+    <script src="oauth-1.0a.js"></script>
+    <script src="dragdrop.js"></script>
+    <script src="app.js"></script> 
+  </head> 
+
+  <body ng-controller="MainCtrl" ng-keyup="selectSearchResult($event)">
+    <div class="container-fluid app">
+    
+    <div class="col-md-9 main-panel">  
+      <div class="article" ng-click="selectMenu('searchResults')">
+        <div class="input-group input-search">
+          <input class="form-control search" type="text" ng-model="searchString" />
+          <span class="input-group-btn">
+            <select class="btn" ng-options = "n for n in [5,10,15,20]" ng-model = "numResults">Go!</select>
+          </span>
+         
+        </div>
+        <div class="search-results">
+          <div ui-draggable="true" drag="food" class="hover-text food-item" ng-class="{selected_text: selectedFoodItem === $index && selectedMenu === 'searchResults'}" ng-repeat="food in searchResults | limitTo:numResults" ng-dblclick="addFoodToSelectedMeal(food, $index)" ng-click="selectFoodItem($index)">
+  			{{food.food_name}}: {{food.food_description}}
+  			</div>
+        </div>
+        </div>
+      <div class=" meals-container">
+        <div class="col-md-4 article meal"  ui-on-drop="onDrop($data,foods)" ng-class="{selected: selectedMeal === name}" ng-repeat="(name,foods) in meals" ng-click="selectMeal(name)">
+          <div class="meal-label">{{name}}</div>
+          <div class="close_button" ng-click="deleteMeal(name)">x</div>
+          <br>
+          <div class="food-list">
+            <div class="food-item hover-text" ui-draggable="true" drag="food" on-drop-success="dropSuccessHandler($index,foods,$event)" ng-repeat="food in foods" ng-click="increaseFoodQuantity($index,name,$event)">
+              <div ng-if="!history[food.food_id]">
+    			       loading...
+    			    </div>
+              <div ng-show="history[food.food_id]">
+    			       {{food.quantity}} x {{food.serving}} {{history[food.food_id].food_name}}
+    			   </div>
+            </div>
+          </div> 
+        </div>
+        <div class="article col-md-4 add-meal-dummy" ng-click="addMeal()">Add meal</div>
+      </div>
+      </div>
+      <div class="col-md-3 right-panel">
+        <div class="col-md-12 article favorites" ng-click="selectMenu('history')">
+          
+            <div class="meal-label">Favorites</div>
+            <div ui-draggable="true" drag="food" class="search-results food-item hover-text" ng-class="{selected_text: selectedFoodItem === id && selectedMenu === 'history'}" ng-repeat="(id,food) in history track by $index" ng-dblclick="addFoodToSelectedMeal(food,$index)" ng-click="selectFoodItem(id)">
+    			  {{food.serving}} {{food.food_name}}: {{food.food_description}}
+    		  </div>
+        
+        </div>
+        <div class="col-md-12 article history" ng-click="selectMenu('history')">
+          
+            <div class="meal-label">History</div>
+            <div ui-draggable="true" drag="food" class="search-results food-item hover-text" ng-class="{selected_text: selectedFoodItem === id && selectedMenu === 'history'}" ng-repeat="(id,food) in history track by $index" ng-dblclick="addFoodToSelectedMeal(food,$index)" ng-click="selectFoodItem(id)">
+    			  {{food.serving}} {{food.food_name}}: {{food.food_description}}
+    		  </div>
+        
+        </div>
+      </div>
+    </div>
+    
+     
+  </body>
+
+</html>
